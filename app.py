@@ -1,29 +1,29 @@
 import random
-from flask import Flask
+from flask import Flask, abort
 
 app = Flask(__name__)
 
-word_lookup = {}
-
 r = random.SystemRandom()
+
+words = []
 
 with open('eff_large_wordlist.txt', 'r') as f:
     for line in f:
-        index, word = line.split()
-        word_lookup[index] = word
+        _, word = line.split()
+        words.append(word)
 
-def get_word():
-    ints = [r.randrange(1, 7) for _ in range(5)]
-    strs = [str(i) for i in ints]
-    index = ''.join(strs)
-    return word_lookup[index]
+def get_words(num_words=6):
+    return ' '.join(r.sample(words, num_words))
+
+@app.route('/')
+def index():
+    return get_words()
 
 @app.route('/<int:num_words>')
-def index(num_words):
-    words = []
-    for _ in range(num_words):
-        words.append(get_word())
-    return ' '.join(words)
+def custom_number(num_words):
+    if num_words < 6:
+        abort(400, 'the minimum number of words is 6')
+    return get_words(num_words)
     
 
 if __name__ == '__main__':
